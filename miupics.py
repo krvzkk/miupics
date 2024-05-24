@@ -1,4 +1,4 @@
-!pip install rembg
+pip install rembg
 import rembg
 import json
 import time
