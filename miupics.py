@@ -1,10 +1,10 @@
-pip install rembg
 import rembg
 import json
 import time
 import base64
 import requests
 from rembg import remove
+
 class Text2ImageAPI:
 
     def __init__(self, url, api_key, secret_key):
@@ -47,6 +47,7 @@ class Text2ImageAPI:
 
             attempts -= 1
             time.sleep(delay)
+
 if __name__ == '__main__':
     api = Text2ImageAPI('https://api-key.fusionbrain.ai/', '09C4B8B6427542CBF80BDD74D493DEEA', '27B92ACCAF8ED0F87644593223E11A06')
     model_id = api.get_model()
@@ -59,6 +60,7 @@ if __name__ == '__main__':
     # Открываем файл для записи бинарных данных изображения
     with open("image.jpg", "wb") as file:
         file.write(image_data)
+
 from PIL import Image
 input_path = 'image.jpg'
 output_path = 'output_1.png'

@@ -9,10 +9,44 @@ import requests
 from rembg import remove
 from PIL import Image
 
+import streamlit as st
+import base64
+
+@st.cache_data
+def get_img_as_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+image = "sample.jpg"
+image1 = "sidebar.jpg"
+img = get_img_as_base64(image)
+img1 = get_img_as_base64(image1)
+page_bg_img = f"""
+<style>
+[data-testid="stAppViewContainer"] {{
+background-image: url("data:image/png;base64,{img}");
+background-size: cover;
+}}
+[data-testid="stSidebar"] {{
+background-image: url("data:image/png;base64,{img1}");
+background-size: center;
+}}
+</style>
+"""
+
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
+#st.header('MiuPics')
 st.title("Добро пожаловать в нейросеть MiuPics")
 st.write("Первая нейросеть по генерированию изображений для веб-дизайна.")
-st.write("Здесь вы сможете сгенерировать необходимое изображение, предварительно выбрав желаемый тип, а также стиль. Просто введите ваш запрос в окно ввода промпта и нажмите на кнопку 'Сгенерировать'. Для того, чтобы вырезать фон, нажмите на кнопку 'Вырезать фон'.")
-st.write("Для того, чтобы вырезать фон, нажмите на кнопку 'Вырезать фон'.")
+st.write("Здесь вы сможете сгенерировать необходимое изображение, предварительно выбрав желаемый тип, также стиль и основные цвета. Просто введите ваш запрос в окно ввода промпта и нажмите на кнопку 'Сгенерировать'. ")
+#title_container = st.beta_container()
+col1, col2 = st.columns([0.3,6])
+with col1:
+    st.image('to.png', width=50)  
+with col2:
+    st.subheader('Для ввода дополнительных параметров откройте боковое меню')
 
 class Text2ImageAPI:
 
@@ -58,31 +92,43 @@ class Text2ImageAPI:
 
             attempts -= 1
             time.sleep(delay)
-
-selected_type= st.radio('Выберите тип изображения:', ["Стикер", "Иконка", "Фотография", "Вектор", "Макет сайта", "Шаблон"])
-if selected_type == "Иконка":
-    icon_type = st.selectbox('Тип иконки:', ['простые элементы', 'информационная', 'линейная', 'иллюстрация', "объемная"])
-    selected_type = selected_type + icon_type
-elif selected_type == "Стикер":
-    stiker_type = st.selectbox('Тип стикера:', ['без фона','линейный','простые элементы','наклейка','графичный'])
-    selected_type = selected_type + stiker_type
+with st.sidebar:
+    col1, col2 = st.columns([2,7])
+    with col1:
+        st.image('icon.png', width=90)  
+    with col2:
+        st.header('MiuPics',)
+    st.title("Выберите необходимые параметры для вашего изображения")
+    selected_type= st.radio('Выберите тип изображения:', ["Стикер", "Иконка", "Фотография", "Вектор", "Макет сайта"])
+    if selected_type == "Иконка":
+        icon_type = st.selectbox('Тип иконки:', ['простые элементы', 'информационная', 'линейная', 'иллюстрация', "объемная"])
+        selected_type = selected_type + icon_type
+    elif selected_type == "Стикер":
+        stiker_type = st.selectbox('Тип стикера:', ['без фона','линейный','простые элементы','наклейка','графичный'])
+        selected_type = selected_type + stiker_type
+    elif selected_type == "Макет сайта":
+        site_type = st.selectbox('Страница сайта:', ['главная','о нас','услуги', 'продукты', 'карточка продукта','контакты','новости', 'карта сайта'])
+        selected_type = selected_type + ', страница "' + site_type + '"'
 
 write_prompt = st.text_input(label='Введите промпт')
 final_prompt = write_prompt + selected_type
 
-selected_style = st.radio('Выберите стиль изображения:', ['Абстракционизм', 'Ультра HD', 'Аниме', 'Без стиля'])
-if selected_style == 'Абстракционизм':
-    img_style = 0
-elif selected_style == 'Ультра HD':
-    img_style = 1
-elif selected_style == 'Аниме':
-    img_style = 2
-else:
-    img_style = 3
+with st.sidebar:
+    selected_style = st.radio('Выберите стиль изображения:', ['Без стиля', 'Ультра HD', 'Аниме', 'Абстракционизм'])
+    #selected_style = 'Без стиля'
+    if selected_style == 'Без стиля':
+        img_style = 3
+    elif selected_style == 'Ультра HD':
+        img_style = 1
+    elif selected_style == 'Аниме':
+        img_style = 2
+    else:
+        img_style = 0
 
-if st.checkbox('Выбрать цвет'):
-    color = st.text_input('Напишите основные цвета генерируемого изображения')
-    final_prompt = final_prompt + ', основные цвета: ' + color
+    if st.checkbox('Выбрать цвет'):
+        color = st.text_input('Напишите основные цвета генерируемого изображения')
+        final_prompt = final_prompt + ', основные цвета: ' + color
+
 def result():
     if __name__ == '__main__':
         api = Text2ImageAPI('https://api-key.fusionbrain.ai/', '09C4B8B6427542CBF80BDD74D493DEEA', '27B92ACCAF8ED0F87644593223E11A06')
@@ -112,15 +158,21 @@ if st.button('Сгенерировать'):
     with st.spinner(text='Подождите, генерируем'):
         time.sleep(3)
         result()
+        st.write("Для того, чтобы вырезать фон, нажмите на кнопку 'Вырезать фон'.")
         image = st.image('image.jpg')
         st.success('Готово!')
         with open('image.jpg', 'rb') as f:
             st.download_button('Скачать', f, file_name='image.jpg')
 elif st.button('Показать сгенерированное изображение'):
-    st.image('image.jpg')
+    st.write("Для того, чтобы вырезать фон, нажмите на кнопку 'Вырезать фон'.")
+    gen_img = st.image('image.jpg')
+    if gen_img is None:
+        st.write("Вы еще ничего не сгенерировали")
 if st.button('Вырезать фон'):
         with st.spinner(text='Подождите, генерируем'):
             time.sleep(3)
             remove_bg()
             st.success('Готово!')
             st.image('output_1.png')
+            with open('output_1.png', 'rb') as f:
+                st.download_button('Скачать', f, file_name='output_1.png')
